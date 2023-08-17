@@ -1,0 +1,21 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  tidbHelloWorldFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: dist/index.handler
+      Runtime: nodejs18.x
+      Timeout: 30
+      Environment:
+        Variables:
+          TIDB_HOST: "localhost"
+          TIDB_PORT: "4000"
+          TIDB_USER: "root"
+          TIDB_PASSWORD: ""
+      Events:
+        Api:
+          Type: HttpApi
+          Properties:
+            Path: /
+            Method: GET
