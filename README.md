@@ -22,44 +22,55 @@ git clone git@github.com:tidb-samples/tidb-aws-lambda-quickstart.git
 
 ### 2. Configure Database Connection
 
-Refer to [`src/dataService.ts#L8`](src/dataService.ts#L8)
+Refer to [`src/dataService.ts#L39`](src/dataService.ts#L39)
 
 ```typescript
-import mysql from 'mysql2';
-
-const pool = mysql.createPool({
-  host, // TiDB Serverless cluster endpoint
-  port, // TiDB Serverless cluster port, 4000 is the default
-  user, // TiDB Serverless cluster user
-  password, // TiDB Serverless cluster password
-  database, // TiDB Serverless cluster database, 'test' is the default
-  ssl: {  // TiDB Serverless cluster SSL config(required)
+mysql.createPool({
+  host,
+  port,
+  user,
+  password,
+  database,
+  ssl: {
     minVersion: 'TLSv1.2',
     rejectUnauthorized: true,
   },
-  ... // other mysql2 config
+  waitForConnections: true,
+  connectionLimit: 1,
+  maxIdle: 1, // max idle connections, the default value is the same as `connectionLimit`
+  idleTimeout: 60000, // idle connections timeout, in milliseconds, the default value 60000
+  queueLimit: 0,
+  enableKeepAlive: true,
+  keepAliveInitialDelay: 0,
 });
 ```
 
 ### 3. Configure Environment Variables
 
-You need to configure the following environment variables:
+You need to configure the following environment variables in [`env.json`](env.json):
 
-```bash
-TIDB_HOST="your_tidb_serverless_cluster_endpoint"
-TIDB_PORT=4000
-TIDB_USER="your_tidb_serverless_cluster_user"
-TIDB_PASSWORD="your_tidb_serverless_cluster_password"
+```json
+{
+  "Parameters": {
+    "TIDB_HOST": "your_tidb_serverless_cluster_endpoint",
+    "TIDB_PORT": "4000",
+    "TIDB_USER": "your_tidb_serverless_cluster_user",
+    "TIDB_PASSWORD": "your_tidb_serverless_cluster_password"
+  }
+}
 ```
 
 ### 4. Define Database Query
 
-Refer to [`src/dataService.ts#L41`](src/dataService.ts#L41)
+Refer to [`src/dataService.ts#L59`](src/dataService.ts#L59)
 
-```javascript
-  singleQuery(sql) {
+```typescript
+  singleQuery(
+    sql: string,
+    ...args: any[]
+  ): Promise<queryResultType | mysql.QueryError> {
     return new Promise((resolve, reject) => {
-      this.pool.query(sql, (err, results, fields) => {
+      this.pool.query(sql, ...args, (err: any, results: any, fields: any) => {
         if (err) {
           reject(err);
         } else {
@@ -74,6 +85,109 @@ Refer to [`src/dataService.ts#L41`](src/dataService.ts#L41)
 
 Refer to [`src/app.ts#L7`](src/app.ts#L7)
 
+### 6. CRUD
+
+#### 6.1 Initialize Database and data
+
+Refer to [`src/dataService.ts#L86`](src/dataService.ts#L86)
+
+```typescript
+  async createTable() {
+    const sql = `CREATE TABLE IF NOT EXISTS players (
+      id INT(11) NOT NULL AUTO_INCREMENT COMMENT 'The unique ID of the player.',
+      coins INT(11) COMMENT 'The number of coins that the player had.',
+      goods INT(11) COMMENT 'The number of goods that the player had.',
+      PRIMARY KEY (\`id\`)
+  )`;
+    await this.singleQuery(sql);
+  }
+
+  async insert() {
+    const sql = `INSERT INTO
+    players (\`id\`, \`coins\`, \`goods\`)
+    VALUES
+        (1, 1, 1024),
+        (2, 2, 512),
+        (3, 3, 256),
+        (4, 4, 128),
+        (5, 5, 64),
+        (6, 6, 32),
+        (7, 7, 16),
+        (8, 8, 8),
+        (9, 9, 4),
+        (10, 10, 2),
+        (11, 11, 1);`;
+    const results = await this.singleQuery(sql);
+    return results;
+  }
+```
+
+Handler: Refer to [`src/app.ts#L16`](src/app.ts#L16)
+
+#### 6.2 Create
+
+Refer to [`src/dataService.ts#L120`](src/dataService.ts#L120)
+
+```typescript
+  async createPlayer(coins: number, goods: number) {
+    const results = await this.singleQuery(
+      `INSERT INTO players (coins, goods) VALUES (?, ?);`,
+      [coins, goods]
+    );
+    return results;
+  }
+```
+
+Handler: Refer to [`src/app.ts#L23`](src/app.ts#L23)
+
+#### 6.3 Read
+
+Refer to [`src/dataService.ts#L128`](src/dataService.ts#L128)
+
+```typescript
+  async getPlayerByID(id: number) {
+    const results = await this.singleQuery(
+      'SELECT id, coins, goods FROM players WHERE id = ?;',
+      [id]
+    );
+    return results;
+  }
+```
+
+Handler: Refer to [`src/app.ts#L20`](src/app.ts#L20)
+
+#### 6.4 Update
+
+Refer to [`src/dataService.ts#L136`](src/dataService.ts#L136)
+
+```typescript
+  async updatePlayer(playerID: number, incCoins: number, incGoods: number) {
+    const results = await this.singleQuery(
+      'UPDATE players SET coins = coins + ?, goods = goods + ? WHERE id = ?;',
+      [incCoins, incGoods, playerID]
+    );
+    return results;
+  }
+```
+
+Handler: Refer to [`src/app.ts#L26`](src/app.ts#L26)
+
+#### 6.5 Delete
+
+Refer to [`src/dataService.ts#L144`](src/dataService.ts#L144)
+
+```typescript
+  async deletePlayerByID(id: number) {
+    const results = await this.singleQuery(
+      'DELETE FROM players WHERE id = ?;',
+      [id]
+    );
+    return results;
+  }
+```
+
+Handler: Refer to [`src/app.ts#L29`](src/app.ts#L29)
+
 ## Local Test
 
 1. Configure **Environment variables** in [`env.json`](env.json)
@@ -85,8 +199,22 @@ Refer to [`src/app.ts#L7`](src/app.ts#L7)
 yarn
 # build
 yarn build
+
 # run local test
-sam local invoke --env-vars env.json -e event.json "tidbHelloWorldFunction"
+## 1. Hello World
+sam local invoke --env-vars env.json -e events/event.json "tidbHelloWorldFunction"
+## 2. Get TiDB version
+sam local invoke --env-vars env.json -e events/event-version.json "tidbVersionFunction"
+## 3. CRUD - Initialize Database and data
+sam local invoke --env-vars env.json -e events/event-init.json "tidbInitFunction"
+## 4. CRUD - Create
+sam local invoke --env-vars env.json -e events/event-post.json "tidbCreateFunction"
+## 5. CRUD - Read
+sam local invoke --env-vars env.json -e events/event-get.json "tidbReadFunction"
+## 6. CRUD - Update
+sam local invoke --env-vars env.json -e events/event-put.json "tidbUpdateFunction"
+## 7. CRUD - Delete
+sam local invoke --env-vars env.json -e events/event-delete.json "tidbDeleteFunction"
 ```
 
 ## Deploy
