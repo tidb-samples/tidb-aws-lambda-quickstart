@@ -204,17 +204,17 @@ yarn build
 ## 1. Hello World
 sam local invoke --env-vars env.json -e events/event.json "tidbHelloWorldFunction"
 ## 2. Get TiDB version
-sam local invoke --env-vars env.json -e events/event-version.json "tidbVersionFunction"
+sam local invoke --env-vars env.json -e events/event-version.json "tidbHelloWorldFunction"
 ## 3. CRUD - Initialize Database and data
-sam local invoke --env-vars env.json -e events/event-init.json "tidbInitFunction"
+sam local invoke --env-vars env.json -e events/event-init.json "tidbHelloWorldFunction"
 ## 4. CRUD - Create
-sam local invoke --env-vars env.json -e events/event-post.json "tidbCreateFunction"
+sam local invoke --env-vars env.json -e events/event-post.json "tidbHelloWorldFunction"
 ## 5. CRUD - Read
-sam local invoke --env-vars env.json -e events/event-get.json "tidbReadFunction"
+sam local invoke --env-vars env.json -e events/event-get.json "tidbHelloWorldFunction"
 ## 6. CRUD - Update
-sam local invoke --env-vars env.json -e events/event-put.json "tidbUpdateFunction"
+sam local invoke --env-vars env.json -e events/event-put.json "tidbHelloWorldFunction"
 ## 7. CRUD - Delete
-sam local invoke --env-vars env.json -e events/event-delete.json "tidbDeleteFunction"
+sam local invoke --env-vars env.json -e events/event-delete.json "tidbHelloWorldFunction"
 ```
 
 ## Deploy
