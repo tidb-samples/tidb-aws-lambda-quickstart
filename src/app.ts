@@ -7,17 +7,36 @@ import type { queryResultType } from './dataService';
 export const handler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
+  const { httpMethod, path } = event;
+  const dataService = new DataService();
+
   try {
-    const dataService = new DataService();
+    let data;
+    if (httpMethod === 'GET' && path === '/init') {
+      data = initDB(dataService);
+    } else if (httpMethod === 'GET' && path === '/version') {
+      data = getTiDBVersion(dataService);
+    } else if (httpMethod === 'GET' && path === '/player') {
+      const id = Number(event.queryStringParameters?.id);
+      data = getPlayer(dataService, id);
+    } else if (httpMethod === 'POST' && path === '/player') {
+      const { coins, goods } = JSON.parse(event.body || '{}');
+      data = createPlayer(dataService, coins, goods);
+    } else if (httpMethod === 'PUT' && path === '/player') {
+      const { id, coins, goods } = JSON.parse(event.body || '{}');
+      data = updatePlayer(dataService, id, coins, goods);
+    } else if (httpMethod === 'DELETE' && path === '/player') {
+      const id = Number(event.queryStringParameters?.id);
+      data = deletePlayer(dataService, id);
+    }
+    if (data) {
+      const { results } = (await data) as queryResultType;
+      return wrapResponse(results);
+    }
     const { results } = (await dataService.singleQuery(
       'SELECT "Hello World";'
     )) as queryResultType;
-    return {
-      statusCode: 200,
-      body: JSON.stringify({
-        results,
-      }),
-    };
+    return wrapResponse(results);
   } catch (err: any) {
     console.error(err);
     return {
@@ -27,4 +46,53 @@ export const handler = async (
       }),
     };
   }
+};
+
+const wrapResponse = (results: queryResultType) => {
+  return {
+    statusCode: 200,
+    body: JSON.stringify({
+      results,
+    }),
+  };
+};
+
+const initDB = async (service: DataService) => {
+  await service.createTable();
+  const results = await service.insert();
+  return results;
+};
+
+const getTiDBVersion = async (service: DataService) => {
+  const results = await service.getTiDBVersion();
+  return results;
+};
+
+const getPlayer = async (service: DataService, id: number) => {
+  const results = await service.getPlayerByID(id);
+  return results;
+};
+
+const createPlayer = async (
+  service: DataService,
+  coins: number,
+  goods: number
+) => {
+  const results = await service.createPlayer(coins, goods);
+  return results;
+};
+
+const updatePlayer = async (
+  service: DataService,
+  id: number,
+  coins: number,
+  goods: number
+) => {
+  const results = await service.updatePlayer(id, coins, goods);
+  return results;
+};
+
+const deletePlayer = async (service: DataService, id: number) => {
+  const results = await service.deletePlayerByID(id);
+  return results;
 };

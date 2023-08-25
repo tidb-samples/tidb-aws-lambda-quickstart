@@ -1,0 +1,5 @@
+{
+  "httpMethod": "POST",
+  "path": "/player",
+  "body": "{ \"coins\": 11, \"goods\": 111 }"
+}
