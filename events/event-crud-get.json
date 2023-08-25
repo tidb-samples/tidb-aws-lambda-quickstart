@@ -1,0 +1,7 @@
+{
+  "httpMethod": "GET",
+  "path": "/player",
+  "queryStringParameters": {
+    "id": "1"
+  }
+}

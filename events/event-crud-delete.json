@@ -1,0 +1,7 @@
+{
+  "httpMethod": "DELETE",
+  "path": "/player",
+  "queryStringParameters": {
+    "id": "1"
+  }
+}

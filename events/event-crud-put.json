@@ -1,0 +1,5 @@
+{
+  "httpMethod": "PUT",
+  "path": "/player",
+  "body": "{ \"id\": 1, \"coins\": 1, \"goods\": 11 }"
+}
