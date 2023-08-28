@@ -22,27 +22,37 @@ git clone git@github.com:tidb-samples/tidb-aws-lambda-quickstart.git
 
 ### 2. Configure Database Connection
 
-Refer to [`src/dataService.ts#L39`](src/dataService.ts#L39)
+Refer to [`lib/tidb.ts`](lib/tidb.ts)
 
 ```typescript
-mysql.createPool({
-  host,
-  port,
-  user,
-  password,
-  database,
-  ssl: {
-    minVersion: 'TLSv1.2',
-    rejectUnauthorized: true,
-  },
-  waitForConnections: true,
-  connectionLimit: 1,
-  maxIdle: 1, // max idle connections, the default value is the same as `connectionLimit`
-  idleTimeout: 60000, // idle connections timeout, in milliseconds, the default value 60000
-  queueLimit: 0,
-  enableKeepAlive: true,
-  keepAliveInitialDelay: 0,
-});
+// lib/tidb.ts
+import mysql from 'mysql2';
+
+let pool: mysql.Pool | null = null;
+
+function connect() {
+  pool = mysql.createPool({
+    host: process.env.TIDB_HOST, // TiDB host, for example: {gateway-region}.aws.tidbcloud.com
+    port: process.env.TIDB_PORT ? Number(process.env.TIDB_PORT) : 4000, // TiDB port, default: 4000
+    user: process.env.TIDB_USER, // TiDB user, for example: {prefix}.root
+    password: process.env.TIDB_PASSWORD, // TiDB password
+    database: process.env.TIDB_DATABASE || 'test', // TiDB database name, default: test
+    ssl: {
+      minVersion: 'TLSv1.2',
+      rejectUnauthorized: true,
+    },
+    connectionLimit: 1, // Setting connectionLimit to "1" in a serverless function environment optimizes resource usage, reduces costs, ensures connection stability, and enables seamless scalability.
+    maxIdle: 1, // max idle connections, the default value is the same as `connectionLimit`
+    enableKeepAlive: true,
+  });
+}
+
+export function getConnection(): mysql.Pool {
+  if (!pool) {
+    connect();
+  }
+  return pool as mysql.Pool;
+}
 ```
 
 ### 3. Configure Environment Variables
@@ -62,7 +72,7 @@ You need to configure the following environment variables in [`env.json`](env.js
 
 ### 4. Define Database Query
 
-Refer to [`src/dataService.ts#L59`](src/dataService.ts#L59)
+Refer to [`src/dataService.ts#L22`](src/dataService.ts#L22)
 
 ```typescript
   singleQuery(
@@ -89,7 +99,7 @@ Refer to [`src/app.ts#L7`](src/app.ts#L7)
 
 #### 6.1 Initialize Database and data
 
-Refer to [`src/dataService.ts#L86`](src/dataService.ts#L86)
+Refer to [`src/dataService.ts#L49`](src/dataService.ts#L49)
 
 ```typescript
   async createTable() {
@@ -126,7 +136,7 @@ Handler: Refer to [`src/app.ts#L16`](src/app.ts#L16)
 
 #### 6.2 Create
 
-Refer to [`src/dataService.ts#L120`](src/dataService.ts#L120)
+Refer to [`src/dataService.ts#L83`](src/dataService.ts#L83)
 
 ```typescript
   async createPlayer(coins: number, goods: number) {
@@ -142,7 +152,7 @@ Handler: Refer to [`src/app.ts#L23`](src/app.ts#L23)
 
 #### 6.3 Read
 
-Refer to [`src/dataService.ts#L128`](src/dataService.ts#L128)
+Refer to [`src/dataService.ts#L91`](src/dataService.ts#L91)
 
 ```typescript
   async getPlayerByID(id: number) {
@@ -158,7 +168,7 @@ Handler: Refer to [`src/app.ts#L20`](src/app.ts#L20)
 
 #### 6.4 Update
 
-Refer to [`src/dataService.ts#L136`](src/dataService.ts#L136)
+Refer to [`src/dataService.ts#L99`](src/dataService.ts#L99)
 
 ```typescript
   async updatePlayer(playerID: number, incCoins: number, incGoods: number) {
@@ -174,7 +184,7 @@ Handler: Refer to [`src/app.ts#L26`](src/app.ts#L26)
 
 #### 6.5 Delete
 
-Refer to [`src/dataService.ts#L144`](src/dataService.ts#L144)
+Refer to [`src/dataService.ts#L107`](src/dataService.ts#L107)
 
 ```typescript
   async deletePlayerByID(id: number) {
