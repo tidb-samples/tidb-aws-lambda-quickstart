@@ -1,4 +1,5 @@
 import mysql from 'mysql2';
+import { getConnection } from '../lib/tidb';
 
 export type queryResultType = {
   results: any;
@@ -11,49 +12,11 @@ export type Player = {
   goods: number;
 };
 
-let connPool: mysql.Pool | null = null;
-
 export class DataService {
   private readonly pool: mysql.Pool;
 
-  constructor(
-    protected readonly host = process.env.TIDB_HOST || 'localhost',
-    protected readonly port = process.env.TIDB_PORT
-      ? parseInt(process.env.TIDB_PORT)
-      : 4000,
-    protected readonly user = process.env.TIDB_USER || 'root',
-    protected readonly password = process.env.TIDB_PASSWORD || '',
-    protected readonly database = 'test'
-  ) {
-    this.pool =
-      connPool || this.createPool(host, port, user, password, database);
-  }
-
-  createPool(
-    host: string,
-    port: number,
-    user: string,
-    password: string,
-    database: string
-  ) {
-    return mysql.createPool({
-      host,
-      port,
-      user,
-      password,
-      database,
-      ssl: {
-        minVersion: 'TLSv1.2',
-        rejectUnauthorized: true,
-      },
-      waitForConnections: true,
-      connectionLimit: 1,
-      maxIdle: 1, // max idle connections, the default value is the same as `connectionLimit`
-      idleTimeout: 60000, // idle connections timeout, in milliseconds, the default value 60000
-      queueLimit: 0,
-      enableKeepAlive: true,
-      keepAliveInitialDelay: 0,
-    });
+  constructor() {
+    this.pool = getConnection();
   }
 
   singleQuery(
