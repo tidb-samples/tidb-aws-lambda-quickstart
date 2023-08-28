@@ -218,13 +218,13 @@ sam local invoke --env-vars env.json -e events/event-version.json "tidbHelloWorl
 ## 3. CRUD - Initialize Database and data
 sam local invoke --env-vars env.json -e events/event-init.json "tidbHelloWorldFunction"
 ## 4. CRUD - Create
-sam local invoke --env-vars env.json -e events/event-post.json "tidbHelloWorldFunction"
+sam local invoke --env-vars env.json -e events/event-crud-post.json "tidbHelloWorldFunction"
 ## 5. CRUD - Read
-sam local invoke --env-vars env.json -e events/event-get.json "tidbHelloWorldFunction"
+sam local invoke --env-vars env.json -e events/event-crud-get.json "tidbHelloWorldFunction"
 ## 6. CRUD - Update
-sam local invoke --env-vars env.json -e events/event-put.json "tidbHelloWorldFunction"
+sam local invoke --env-vars env.json -e events/event-crud-put.json "tidbHelloWorldFunction"
 ## 7. CRUD - Delete
-sam local invoke --env-vars env.json -e events/event-delete.json "tidbHelloWorldFunction"
+sam local invoke --env-vars env.json -e events/event-crud-delete.json "tidbHelloWorldFunction"
 ```
 
 ## Deploy
