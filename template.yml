@@ -14,8 +14,23 @@ Resources:
           TIDB_USER: "root"
           TIDB_PASSWORD: ""
       Events:
-        Api:
+        RootApi:
           Type: HttpApi
           Properties:
             Path: /
             Method: GET
+        InitApi:
+          Type: HttpApi
+          Properties:
+            Path: /init
+            Method: GET
+        VersionApi:
+          Type: HttpApi
+          Properties:
+            Path: /version
+            Method: GET
+        PlayersApi:
+          Type: HttpApi
+          Properties:
+            Path: /player
+            Method: ANY

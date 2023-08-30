@@ -1,13 +1,13 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 
-import { DataService } from './dataService';
-import type { queryResultType } from './dataService';
+import { DataService, queryResultType } from './dataService';
 
 // https://docs.aws.amazon.com/lambda/latest/dg/typescript-handler.html
 export const handler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
-  const { httpMethod, path } = event;
+  const { requestContext } = event;
+  const { method: httpMethod, path } = (requestContext as any).http;
   const dataService = new DataService();
 
   try {
